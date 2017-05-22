@@ -53,12 +53,14 @@ func (seq Sequence) String() string {
 	return s
 }
 
+// copy makes a shallow copy of the sequence.
 func (seq Sequence) copy() Sequence {
 	copied := make(Sequence, len(seq))
 	copy(copied, seq)
 	return copied
 }
 
+// suffix returns the suffix of seq w.r.t. the prefix of seq until indices i, j.
 func (seq Sequence) suffix(i, j int) Sequence {
 	suffix := seq[i:]
 	if len(suffix) == 0 {
@@ -74,7 +76,9 @@ func (seq Sequence) suffix(i, j int) Sequence {
 	return suffix
 }
 
-func (seq Sequence) sequenceSuffix(item int) Sequence {
+// sequencePostfix returns the suffix of seq w.r.t the itemset containing only
+// item (noted <item>). It returns nil if and only if such suffix doesn't exist.
+func (seq Sequence) sequencePostfix(item int) Sequence {
 	for i, set := range seq {
 		for j, it := range set {
 			if it == item {
@@ -88,7 +92,9 @@ func (seq Sequence) sequenceSuffix(item int) Sequence {
 	return nil
 }
 
-func (seq Sequence) itemSetSuffix(itemSet ItemSet) Sequence {
+// itemSetPostfix returns the suffix of seq w.r.t. itemSet, assuming _ represents
+// itemSet without its last item.
+func (seq Sequence) itemSetPostfix(itemSet ItemSet) Sequence {
 	lastItem := itemSet[len(itemSet)-1]
 	for i, set := range seq {
 		if set[0] == placeholder && set[1] == lastItem {
@@ -110,6 +116,8 @@ func (seq Sequence) itemSetSuffix(itemSet ItemSet) Sequence {
 	return nil
 }
 
+// frequentItems returns frequent sequential patterns in db that have a length
+// equal to one.
 func frequentItems(db []Sequence, minSupport int) ItemSet {
 	var list ItemSet
 	m := make(map[int]int)
@@ -131,10 +139,13 @@ func frequentItems(db []Sequence, minSupport int) ItemSet {
 	return list
 }
 
+// appendToSequence takes an alpha-projected database db, and returns an
+// alpha'-projected database, given alpha' is alpha appended with <item>. The
+// length of the result is the frequency of the pattern alpha'.
 func appendToSequence(db []Sequence, minSupport int, item int) []Sequence {
 	var projected []Sequence
 	for _, seq := range db {
-		suffix := seq.sequenceSuffix(item)
+		suffix := seq.sequencePostfix(item)
 		if suffix == nil {
 			continue
 		}
@@ -144,10 +155,13 @@ func appendToSequence(db []Sequence, minSupport int, item int) []Sequence {
 	return projected
 }
 
+// appendToItemSet takes an alpha-projected database db, and returns an
+// alpha'-projected database, given alpha' is alpha with item added to its last
+// itemset. The length of the result is the frequency of the pattern alpha'.
 func appendToItemSet(db []Sequence, minSupport int, itemSet ItemSet) []Sequence {
 	var projected []Sequence
 	for _, seq := range db {
-		suffix := seq.itemSetSuffix(itemSet)
+		suffix := seq.itemSetPostfix(itemSet)
 		if suffix == nil {
 			continue
 		}
