@@ -20,8 +20,8 @@ var testMinSupport = 2
 var testDB = []Sequence{
 	{{a}, {a, b, c}, {a, c}, {d}, {c, f}},
 	{{a, d}, {c}, {b, c}, {a, e}},
-	{{c, f}, {a, b}, {d, f}, {c}, {b}},
-	{{c}, {g}, {a, f}, {c}, {b}, {c}},
+	{{e, f}, {a, b}, {d, f}, {c}, {b}},
+	{{e}, {g}, {a, f}, {c}, {b}, {c}},
 }
 
 var testDBProjectedA = []Sequence{
@@ -89,9 +89,8 @@ func TestAppendToSequence_b(t *testing.T) {
 }
 
 func TestAppendToSequence_c(t *testing.T) {
-	result := appendToSequence(testDBProjectedA, testMinSupport, c)
+	result := appendToSequence(testDB, testMinSupport, c)
 
-	// <c> in the paper
 	want := []Sequence{
 		{{a, c}, {d}, {c, f}},
 		{{b, c}, {a, e}},
