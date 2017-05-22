@@ -2,6 +2,7 @@ package prefixspan
 
 import (
 	"reflect"
+	"sort"
 	"testing"
 )
 
@@ -31,9 +32,112 @@ var testDBProjectedA = []Sequence{
 	{{placeholder, f}, {c}, {b}, {c}},
 }
 
+var testDBProjectedF = []Sequence{
+	{},
+	{{a, b}, {d, f}, {c}, {b}},
+	{{c}, {b}, {c}},
+}
+
+var testDBProjectedFB = []Sequence{
+	{{d, f}, {c}, {b}},
+	{{c}},
+}
+
+func lessItemSet(a, b ItemSet) bool {
+	for i := 0; i < len(a) && i < len(b); i++ {
+		if a[i] < b[i] {
+			return true
+		}
+		if a[i] > b[i] {
+			return false
+		}
+	}
+	return len(a) < len(b)
+}
+
+func sortDB(db []Sequence) {
+	sort.Slice(db, func(i, j int) bool {
+		a, b := db[i], db[j]
+
+		for k := 0; k < len(a) && k < len(b); k++ {
+			if !reflect.DeepEqual(a[k], b[k]) {
+				return lessItemSet(a[k], b[k])
+			}
+		}
+		return len(a) < len(b)
+	})
+}
+
 func TestPrefixSpan(t *testing.T) {
 	result := PrefixSpan(testDB, testMinSupport)
-	t.Log(result) // TODO
+
+	want := []Sequence{
+		{{a}},
+		{{a}, {a}},
+		{{a}, {b}},
+		{{a}, {b, c}},
+		{{a}, {b, c}, {a}},
+		{{a}, {b}, {a}},
+		{{a}, {b}, {c}},
+		{{a, b}},
+		{{a, b}, {c}},
+		{{a, b}, {d}},
+		{{a, b}, {f}},
+		{{a, b}, {d}, {c}},
+		{{a}, {c}},
+		{{a}, {c}, {a}},
+		{{a}, {c}, {b}},
+		{{a}, {c}, {c}},
+		{{a}, {d}},
+		{{a}, {d}, {c}},
+		{{a}, {f}},
+
+		{{b}},
+		{{b}, {a}},
+		{{b}, {c}},
+		{{b, c}},
+		{{b, c}, {a}},
+		{{b}, {d}},
+		{{b}, {d}, {c}},
+		{{b}, {f}},
+
+		{{c}},
+		{{c}, {a}},
+		{{c}, {b}},
+		{{c}, {c}},
+
+		{{d}},
+		{{d}, {b}},
+		{{d}, {c}},
+		{{d}, {c}, {b}},
+
+		{{e}},
+		{{e}, {a}},
+		{{e}, {a}, {b}},
+		{{e}, {a}, {c}},
+		{{e}, {a}, {c}, {b}},
+		{{e}, {b}},
+		{{e}, {b}, {c}},
+		{{e}, {c}},
+		{{e}, {c}, {b}},
+		{{e}, {f}},
+		{{e}, {f}, {b}},
+		{{e}, {f}, {c}},
+		{{e}, {f}, {c}, {b}},
+
+		{{f}},
+		{{f}, {b}},
+		{{f}, {b}, {c}},
+		{{f}, {c}},
+		{{f}, {c}, {b}},
+	}
+
+	sortDB(want)
+	sortDB(result)
+
+	if !reflect.DeepEqual(result, want) {
+		t.Errorf("PrefixSpan() = \n%v\n, want \n%v", result, want)
+	}
 }
 
 func TestAppendToSequence_a(t *testing.T) {
@@ -51,7 +155,7 @@ func TestAppendToSequence_aa(t *testing.T) {
 
 	want := []Sequence{
 		{{placeholder, b, c}, {a, c}, {d}, {c, f}},
-		{{placeholder, e}},
+		{{placeholder, e}}, // Typo in paper?
 	}
 
 	if !reflect.DeepEqual(result, want) {
@@ -65,6 +169,7 @@ func TestAppendToSequence_ab(t *testing.T) {
 	want := []Sequence{
 		{{placeholder, c}, {a, c}, {d}, {c, f}},
 		{{placeholder, c}, {a, e}}, // Typo in paper?
+		{},
 		{{c}},
 	}
 
@@ -100,6 +205,39 @@ func TestAppendToSequence_c(t *testing.T) {
 
 	if !reflect.DeepEqual(result, want) {
 		t.Errorf("appendToSequence(%v) = \n%v\n, want \n%v", c, result, want)
+	}
+}
+
+func TestAppendToSequence_f(t *testing.T) {
+	result := appendToSequence(testDB, testMinSupport, f)
+
+	want := testDBProjectedF
+
+	if !reflect.DeepEqual(result, want) {
+		t.Errorf("appendToSequence(%v) = \n%v\n, want \n%v", f, result, want)
+	}
+}
+
+func TestAppendToSequence_fb(t *testing.T) {
+	result := appendToSequence(testDBProjectedF, testMinSupport, b)
+
+	want := testDBProjectedFB
+
+	if !reflect.DeepEqual(result, want) {
+		t.Errorf("appendToSequence(appendToSequence(%v), %v) = \n%v\n, want \n%v", f, b, result, want)
+	}
+}
+
+func TestAppendToSequence_fbc(t *testing.T) {
+	result := appendToSequence(testDBProjectedFB, testMinSupport, c)
+
+	want := []Sequence{
+		{{b}},
+		{},
+	}
+
+	if !reflect.DeepEqual(result, want) {
+		t.Errorf("appendToSequence(appendToSequence(appendToSequence(%v), %v), %v) = \n%v\n, want \n%v", f, b, c, result, want)
 	}
 }
 

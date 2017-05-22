@@ -135,7 +135,7 @@ func appendToSequence(db []Sequence, minSupport int, item int) []Sequence {
 	var projected []Sequence
 	for _, seq := range db {
 		suffix := seq.sequenceSuffix(item)
-		if len(suffix) == 0 {
+		if suffix == nil {
 			continue
 		}
 
@@ -148,7 +148,7 @@ func appendToItemSet(db []Sequence, minSupport int, itemSet ItemSet) []Sequence 
 	var projected []Sequence
 	for _, seq := range db {
 		suffix := seq.itemSetSuffix(itemSet)
-		if len(suffix) == 0 {
+		if suffix == nil {
 			continue
 		}
 
