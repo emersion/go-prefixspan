@@ -253,3 +253,13 @@ func TestAppendToItemSet_ab(t *testing.T) {
 		t.Errorf("appendToItemSet(appendToItemSet(%v), %v) = \n%v\n, want \n%v", ItemSet{a}, ItemSet{a, b}, result, want)
 	}
 }
+
+func TestSequence_String(t *testing.T) {
+	seq := Sequence{{placeholder, c}, {a, c}, {d}, {c, f}}
+	s := seq.String()
+	want := "<(_c)(ac)d(cf)>"
+
+	if s != want {
+		t.Errorf("Sequence.String() = %v, want %v", s, want)
+	}
+}
